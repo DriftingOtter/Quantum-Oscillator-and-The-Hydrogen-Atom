@@ -135,4 +135,4 @@ class ClassicalOscillator:
 
 if __name__ == "__main__":
     oscillator = ClassicalOscillator(mass=1.0, k=2)
-    oscillator.plot_interactive(t0=0.0, tn=10.0, initial_x0=4.0)
+    oscillator.plot_interactive(t0=0.0, tn=5.0, initial_x0=4.0)

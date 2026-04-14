@@ -1,2 +1,2 @@
-from Viz import *
-from Cmp import *
+from ClassicalOscillator import *
+from QuantumOscillator import *

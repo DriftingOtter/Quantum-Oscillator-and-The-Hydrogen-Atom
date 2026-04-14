@@ -75,9 +75,9 @@ class QuantumOscillator:
             ax=ax_freq,
             label='Quantum Number (n)',
             valmin=0,
-            valmax=10,
+            valmax=1000,
             valinit=initial_n,
-            valstep=1  # Snap to integers
+            valstep=1
         )
 
         self.freq_slider.on_changed(self.update)
