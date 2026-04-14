@@ -75,7 +75,7 @@ class QuantumOscillator:
             ax=ax_freq,
             label='Quantum Number (n)',
             valmin=0,
-            valmax=1000,
+            valmax=15,
             valinit=initial_n,
             valstep=1
         )
