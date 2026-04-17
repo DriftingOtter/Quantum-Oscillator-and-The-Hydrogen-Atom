@@ -95,14 +95,22 @@ class HydrogenAtom:
         shell_names = {0: 's', 1: 'p', 2: 'd', 3: 'f', 4: 'g'}
         return f"{n}{shell_names.get(l, f'l={l}')}"
 
-    def _build_polar_mesh(self, r, R):
-        theta         = np.linspace(0, 2 * np.pi, 360)
-        R_abs         = np.abs(R)
-        step          = max(1, len(r) // 400)
-        r_ds          = r[::step] / self.a0
-        R_ds          = R_abs[::step]
+    def _build_polar_mesh(self, r, R, r_cutoff_scaled):
+        theta = np.linspace(0, 2 * np.pi, 360)
+        R_abs = np.abs(R)
+        r_scaled = r / self.a0
+
+        # clip to the effective probability region
+        mask = r_scaled <= r_cutoff_scaled
+        r_ds_full = r_scaled[mask]
+        R_ds_full = R_abs[mask]
+
+        step = max(1, len(r_ds_full) // 400)
+        r_ds = r_ds_full[::step]
+        R_ds = R_ds_full[::step]
+
         theta_grid, R_grid = np.meshgrid(theta, R_ds)
-        r_grid        = np.tile(r_ds, (len(theta), 1)).T
+        r_grid = np.tile(r_ds, (len(theta), 1)).T
         return theta_grid, r_grid, R_grid
 
     def plot_state(self, initial_n=1, initial_l=0):
@@ -139,19 +147,18 @@ class HydrogenAtom:
         l = self._clamp_l(n, l)
 
         r_min, r_max = self._radial_domain(n)
-        r            = np.linspace(r_min, r_max, 4000)
-        R, P         = self._evaluate(n, l, r)
-        r_scaled     = r / self.a0
+        r = np.linspace(r_min, r_max, 4000)
+        R, P = self._evaluate(n, l, r)
+        r_scaled = r / self.a0
 
         radial_nodes = n - l - 1
-        orbital      = self._orbital_label(n, l)
+        orbital = self._orbital_label(n, l)
         self.fig.suptitle(
             f"Hydrogen Atom  |  $n={n}$,  $\\ell={l}$  ({orbital})  "
             f"|  radial nodes $= {radial_nodes}$",
             fontsize=12
         )
 
-        # amplitude
         self.ax_amplitude.clear()
         self.ax_amplitude.plot(r_scaled, R, color='steelblue',
                                label=f'$R_{{{n}{l}}}(r)$', linewidth=1.8)
@@ -163,34 +170,32 @@ class HydrogenAtom:
         self.ax_amplitude.legend(loc='upper right', fontsize=8)
         self.ax_amplitude.grid(True, which='both', alpha=0.25)
 
-        # polar
+        dr = r[1] - r[0]
+        cumP = np.cumsum(P) * dr
+        cumP /= cumP[-1]
+        idx_cutoff = np.searchsorted(cumP, 0.999)
+        r_cutoff_scaled = r_scaled[min(idx_cutoff, len(r_scaled) - 1)]
+        r_polar_lim = r_cutoff_scaled * 1.08
+
         self.ax_polar.clear()
-        theta_grid, r_grid, R_grid = self._build_polar_mesh(r, R)
+        theta_grid, r_grid, R_grid = self._build_polar_mesh(r, R, r_cutoff_scaled)
         vmin, vmax = R_grid.min(), R_grid.max()
         if vmax - vmin < 1e-14:
             vmax = vmin + 1e-14
 
-        if self._polar_mesh is None:
-            self._polar_mesh = self.ax_polar.pcolormesh(
-                theta_grid, r_grid, R_grid,
-                cmap='plasma', shading='auto',
-                norm=Normalize(vmin=vmin, vmax=vmax)
-            )
-        else:
-            self._polar_mesh = self.ax_polar.pcolormesh(
-                theta_grid, r_grid, R_grid,
-                cmap='plasma', shading='auto',
-                norm=Normalize(vmin=vmin, vmax=vmax)
-            )
-
+        self._polar_mesh = self.ax_polar.pcolormesh(
+            theta_grid, r_grid, R_grid,
+            cmap='plasma', shading='auto',
+            norm=Normalize(vmin=vmin, vmax=vmax)
+        )
+        self.ax_polar.set_ylim(0, r_polar_lim)
         self.ax_polar.set_title(r'Polar  $|R_{n\ell}(r)|$  vs $r/a_0$', fontsize=10, pad=12)
         self.ax_polar.tick_params(labelsize=7)
 
-        # probability — mirrored about nucleus for full cross-section
         self.ax_prob.clear()
-        self.ax_prob.fill_between( r_scaled,  P, color='skyblue', alpha=0.4)
-        self.ax_prob.fill_between(-r_scaled,  P, color='skyblue', alpha=0.4)
-        self.ax_prob.plot( r_scaled, P, color='navy', linewidth=1.8,
+        self.ax_prob.fill_between(r_scaled, P, color='skyblue', alpha=0.4)
+        self.ax_prob.fill_between(-r_scaled, P, color='skyblue', alpha=0.4)
+        self.ax_prob.plot(r_scaled, P, color='navy', linewidth=1.8,
                           label=f'$P(r)=r^2|R_{{{n}{l}}}(r)|^2$')
         self.ax_prob.plot(-r_scaled, P, color='navy', linewidth=1.8)
         self.ax_prob.axvline(0, color='black', linewidth=0.8, linestyle='--', alpha=0.4)
