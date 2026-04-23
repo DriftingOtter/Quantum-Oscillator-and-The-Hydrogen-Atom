@@ -12,7 +12,7 @@ This repository supports a written development of the quantum harmonic oscillato
 **`ClassicalOscillator.py`** — The same physical system in the classical limit: a mass on a spring, written as a linear ODE and integrated with **`scipy.integrate.solve_ivp`** and the **RK45** solver. You choose an initial displacement \(x_0\) with a slider; the plot shows the trajectory in time and how kinetic energy, potential energy, and the total exchange energy over a period. Together with the quantum script, this gives a direct side-by-side narrative for the harmonic problem.
 
 ![Hydrogen Electron Orbital Wave function (n=4, l=12) Diagram of Probability Distribution and Wave function Amplitude](./images/Hydrogen_Atom_n4_l2.png)
-![Hydrogen Electron Orbital Wave function (n=15, l=14) Diagram of Probability Distribution and Wave function Amplitude](./images/Quantum_Harmonic_Oscillator_n15.png)
+![Hydrogen Electron Orbital Wave function (n=15, l=14) Diagram of Probability Distribution and Wave function Amplitude](./images/Hydrogen_Atom_n15_l14.png)
 
 **`HydrogenOrbital.py`** — The radial part of the non-relativistic hydrogen problem. Radial wave functions \(R_{n\ell}(r)\) are built from the standard Coulomb normalization and associated Laguerre structure; you see the radial amplitude on a logarithmic radius axis, a polar colormap of \(|R_{n\ell}|\), and the radial probability \(P(r)=r^2|R_{n\ell}|^2\) shown as a symmetric cross-section about the nucleus. Sliders set **n** from **1 to 15** and **\(\ell\)** from **0** upward, with \(\ell\) limited by **\(\ell \le n-1\)** so only physical combinations appear. The heavier numerical work runs through **Numba** so the plots stay responsive as you change \(n\) and \(\ell\).
 
